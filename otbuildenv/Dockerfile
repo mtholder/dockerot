@@ -66,11 +66,10 @@ RUN cd otcetera/build \
   && make check \
   && make install
 
-# EXPOSE 1984
-#  
-# CMD /usr/local/bin/otc-tol-ws otcetera/data/ex-tax-1 -D otcetera/data/# ex-synth-par
-# 
-# 
-# FROM alpine:latest
+FROM alpine:latest as otcws
 
-CMD top 
+COPY --from=otcbuilder /otc /otc
+EXPOSE 1984
+CMD /usr/local/bin/otc-tol-ws otcetera/data/ex-tax-1 -D otcetera/data/# ex-synth-par
+
+# CMD top 
