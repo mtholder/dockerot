@@ -15,38 +15,27 @@ RUN cd restbed/build  \
   && cd -
 
 ################################################################################
-# otcfreshbuilder uses the build restbed library.
-# git clone and build env for otcetera 
+# otcbuilder uses the build restbed library.
+# uses host FS for otcetera 
 # 
-FROM otbuildenv as otcfreshbuilder
+FROM otbuildenv as otcbuilder
 
 COPY --from=restbedbuilder /restbed /restbed
 
-RUN \
-  git clone https://github.com/mtholder/otcetera.git \
-  && cd otcetera \
+ADD ./otcetera /otcetera
+
+RUN && cd otcetera \
   && bash bootstrap.sh \
   && mkdir build \
   && cd build \
   && export CPPFLAGS="-I/restbed/distribution/include" \
   && export LDFLAGS="-L/restbed/distribution/library" \
   && bash ../reconf-gcc-docker.sh \
-  && make -j8
-
-################################################################################
-# Just to avoid recompiling everything when we are working
-#  on small bug fixes, otcbuilder just pulls from otcfreshbuilder
-#  If otcfreshbuilder is fairly up-to-date, then the compilation
-#  step will not be as painful.
-#
-FROM otcfreshbuilder as otcbuilder
-RUN cd otcetera \
-  && git pull origin \ 
-  && cd build \
-  && make -j4 \
-  && rm -rf /otc \
+  && make -j8 \
   && make check \
+  && rm -rf /otc \
   && make install
+
 
 ################################################################################
 # The app is based on the slim alpine image, not the build env.
