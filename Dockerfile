@@ -7,13 +7,16 @@ RUN apk update && apk upgrade && \
         bash \
         boost-dev \
         cmake \
+        curl-dev \
         git \
         libtool \
         linux-headers \
         make \
         openssh \
         openssl-dev \
-        python-dev
+        python-dev \
+        py-pip  \
+    && pip install requests
 
 RUN git clone --recursive https://github.com/corvusoft/restbed.git \
   && mkdir restbed/build 
@@ -34,13 +37,16 @@ RUN apk update && apk upgrade && \
         bash \
         boost-dev \
         cmake \
+        curl-dev \
         git \
         libtool \
         linux-headers \
         make \
         openssh \
         openssl-dev \
-        python-dev
+        python-dev \
+        py-pip  \
+    && pip install requests
 
 COPY --from=restbedbuilder /restbed /restbed
 
@@ -48,17 +54,17 @@ COPY --from=restbedbuilder /restbed /restbed
 RUN \
   git clone https://github.com/mtholder/otcetera.git \
   && cd otcetera \
-  && git checkout -b ws origin/ws \
   && bash bootstrap.sh \
   && mkdir build \
   && cd build \
   && export CPPFLAGS="-I/restbed/distribution/include" \
   && export LDFLAGS="-L/restbed/distribution/library" \
   && bash ../reconf-gcc-docker.sh \
-  && make -j8 \
+  && make -j8
+
+RUN cd otcetera/build \
   && make check \
-  && make install \
-  && cd -
+  && make install
 
 # EXPOSE 1984
 #  
