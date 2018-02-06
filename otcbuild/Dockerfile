@@ -57,8 +57,10 @@ RUN cd otcetera \
 # otcbuilder uses otcconfigure
 # 
 FROM otcconfigure as otcbuilder
-
-RUN  cd /otcetera/build \
+ARG sha
+RUN  cd /otcetera \
+  && git checkout $sha \
+  && cd build \
   && make -j8 \
   && make check \
   && rm -rf /otc \
