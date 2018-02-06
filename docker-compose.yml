@@ -1,0 +1,10 @@
+version: "3"
+services:
+  treews:
+    build:
+      context: otcdocker
+    volumes:
+      - ./ott:/ott-current
+      - ./tree-par:/propinquity-out-par
+    ports:
+      - 1985:1985
