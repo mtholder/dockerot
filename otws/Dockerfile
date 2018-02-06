@@ -1,27 +1,12 @@
-FROM frolvlad/alpine-gxx as restbedbuilder
-
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-        autoconf \
-        automake \
-        bash \
-        boost-dev \
-        cmake \
-        curl-dev \
-        git \
-        libtool \
-        linux-headers \
-        make \
-        openssh \
-        openssl-dev \
-        python-dev \
-        py-pip  \
-    && pip install requests
+################################################################################
+# restbedbuilder
+# Use our own otbuildenv as the base (it is based on alpine)
+# To compile restbed
+#
+FROM otbuildenv as restbedbuilder
 
 RUN git clone --recursive https://github.com/corvusoft/restbed.git \
-  && mkdir restbed/build 
-
-
+  && mkdir restbed/build
 
 RUN cd restbed/build  \
   && cmake -DBUILD_SSL=YES .. \
@@ -29,28 +14,14 @@ RUN cd restbed/build  \
   && make install \
   && cd -
 
-FROM frolvlad/alpine-gxx as otcbuilder
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-        autoconf \
-        automake \
-        bash \
-        boost-dev \
-        cmake \
-        curl-dev \
-        git \
-        libtool \
-        linux-headers \
-        make \
-        openssh \
-        openssl-dev \
-        python-dev \
-        py-pip  \
-    && pip install requests
+################################################################################
+# otcfreshbuilder uses the build restbed library.
+# git clone and build env for otcetera 
+# 
+FROM otbuildenv as otcfreshbuilder
 
 COPY --from=restbedbuilder /restbed /restbed
 
- 
 RUN \
   git clone https://github.com/mtholder/otcetera.git \
   && cd otcetera \
@@ -62,10 +33,24 @@ RUN \
   && bash ../reconf-gcc-docker.sh \
   && make -j8
 
-RUN cd otcetera/build \
+################################################################################
+# Just to avoid recompiling everything when we are working
+#  on small bug fixes, otcbuilder just pulls from otcfreshbuilder
+#  If otcfreshbuilder is fairly up-to-date, then the compilation
+#  step will not be as painful.
+#
+FROM otcfreshbuilder as otcbuilder
+RUN cd otcetera \
+  && git pull origin \ 
+  && cd build \
+  && make -j4 \
+  && rm -rf /otc \
   && make check \
   && make install
 
+################################################################################
+# The app is based on the slim alpine image, not the build env.
+#
 FROM alpine:latest as otcws
 
 COPY --from=otcbuilder /otc /otc
