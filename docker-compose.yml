@@ -7,4 +7,4 @@ services:
       - ./ott:/ott-current
       - ./tree-par:/propinquity-out-par
     ports:
-      - 1985:1985
+      - 1984:1984
